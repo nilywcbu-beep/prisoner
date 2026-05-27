@@ -1,0 +1,474 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>深空之囚：王子的純白寵物 V3</title>
+    <style>
+        body {
+            background-color: #0d0b14;
+            color: #e0dced;
+            font-family: "PingFang TC", "Microsoft JhengHei", sans-serif;
+            margin: 0;
+            padding: 20px;
+            display: flex;
+            justify-content: center;
+            height: 95vh;
+        }
+
+        .game-container {
+            display: flex;
+            width: 1200px;
+            max-width: 100%;
+            background-color: #161224;
+            border: 1px solid #3d2f5c;
+            border-radius: 8px;
+            box-shadow: 0 0 20px rgba(138, 43, 226, 0.2);
+            overflow: hidden;
+        }
+
+        /* 左右側邊欄 */
+        .sidebar {
+            width: 260px;
+            padding: 20px;
+            background-color: #0f0c18;
+            box-sizing: border-box;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+        }
+
+        .left-sidebar { border-right: 1px solid #3d2f5c; }
+        .right-sidebar { border-left: 1px solid #3d2f5c; }
+
+        h3 {
+            color: #a182e6;
+            margin-top: 0;
+            border-bottom: 1px solid #3d2f5c;
+            padding-bottom: 8px;
+            font-size: 1.1rem;
+            letter-spacing: 1px;
+        }
+
+        /* 狀態列 */
+        .status-group {
+            margin-bottom: 15px;
+        }
+        .status-label {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 5px;
+            font-size: 0.9rem;
+        }
+        .progress-bar {
+            width: 100%;
+            height: 12px;
+            background-color: #221a35;
+            border-radius: 6px;
+            overflow: hidden;
+            border: 1px solid #2d2245;
+        }
+        .progress-fill {
+            height: 100%;
+            width: 0%;
+            transition: width 0.4s ease, background-color 0.4s ease;
+        }
+        #favor-fill { background: linear-gradient(90deg, #da70d6, #ff69b4); width: 10%; }
+        #arousal-fill { background: linear-gradient(90deg, #ff4500, #ff007f); width: 0%; }
+        #pain-fill { background: linear-gradient(90deg, #4b0082, #8b0000); width: 0%; }
+
+        /* 道具與部位按鈕 */
+        .item-btn, .part-btn, .action-btn {
+            display: block;
+            width: 100%;
+            padding: 11px;
+            margin-bottom: 8px;
+            background-color: #1e1733;
+            border: 1px solid #4a3b6e;
+            color: #d1c7e8;
+            border-radius: 4px;
+            cursor: pointer;
+            text-align: left;
+            font-size: 0.9rem;
+            transition: all 0.2s;
+        }
+        .item-btn:hover, .part-btn:hover {
+            background-color: #312454;
+            border-color: #8a2be2;
+            color: #ffffff;
+            box-shadow: 0 0 8px rgba(138, 43, 226, 0.4);
+        }
+        .item-btn.selected {
+            background-color: #4a154b;
+            border-color: #ff007f;
+            color: #fff;
+        }
+        .soothe-btn {
+            background-color: #15383b;
+            border-color: #246e73;
+            color: #bfeff2;
+            font-weight: bold;
+        }
+        .soothe-btn:hover {
+            background-color: #1c5257;
+            border-color: #33a6ad;
+            box-shadow: 0 0 8px rgba(51, 166, 173, 0.4);
+        }
+
+        /* 中間主文本區 */
+        .main-content {
+            flex: 1;
+            padding: 25px;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            box-sizing: border-box;
+            background-color: #130f1f;
+        }
+
+        .story-text {
+            flex: 1;
+            overflow-y: auto;
+            padding-right: 10px;
+            line-height: 1.8;
+            font-size: 1.05rem;
+            white-space: pre-line;
+        }
+
+        .interaction-zone {
+            margin-top: 20px;
+            border-top: 1px solid #3d2f5c;
+            padding-top: 20px;
+        }
+
+        .grid-options {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 10px;
+        }
+
+        /* 結局與致謝樣式 */
+        .ending-container {
+            text-align: center;
+            padding: 20px 10px;
+        }
+        .thanks-text {
+            margin-top: 30px;
+            padding: 20px;
+            background-color: #0f0c18;
+            border: 1px dashed #5c4d82;
+            border-radius: 6px;
+            font-size: 0.95rem;
+            color: #a195c2;
+            text-align: left;
+            line-height: 1.7;
+        }
+
+        /* 滾動條美化 */
+        ::-webkit-scrollbar { width: 6px; }
+        ::-webkit-scrollbar-track { background: #130f1f; }
+        ::-webkit-scrollbar-thumb { background: #3d2f5c; border-radius: 3px; }
+    </style>
+</head>
+<body>
+
+<div class="game-container">
+    <!-- 左側邊欄：Kyo 的狀態 -->
+    <div class="sidebar left-sidebar">
+        <div>
+            <h3>被飼養者的狀態</h3>
+            <div class="status-group">
+                <div class="status-label"><span>好感度</span><span id="favor-val">100/1000</span></div>
+                <div class="progress-bar"><div id="favor-fill" class="progress-fill"></div></div>
+            </div>
+            <div class="status-group">
+                <div class="status-label"><span>興奮度</span><span id="arousal-val">0/1000</span></div>
+                <div class="progress-bar"><div id="arousal-fill" class="progress-fill"></div></div>
+            </div>
+            <div class="status-group">
+                <div class="status-label"><span>痛楚度</span><span id="pain-val">0/1000</span></div>
+                <div class="progress-bar"><div id="pain-fill" class="progress-fill"></div></div>
+            </div>
+        </div>
+        <div style="font-size: 0.85rem; color: #73629b; line-height: 1.5; margin-bottom: 10px;">
+            <p>※ 支配法則：當痛楚度上升時，Kyo 的興奮度與好感度將會受到壓制而大幅減少。</p>
+            <p>善用「安撫」可以軟化他的警戒心，修復他的精神創傷。</p>
+        </div>
+    </div>
+
+    <!-- 中間：劇情與部位選擇 -->
+    <div class="main-content" id="main-content">
+        <div class="story-text" id="story-display">
+            這是你在地球上捕獲的獵物。
+            
+            他原本只是一個剛下課、走在回家路上的普通人類高中男生，名叫 Kyo。當他從強烈的眩暈中醒來時，發現自己被沉重的拘束帶牢牢固定在這個充滿無機質、過於明亮的母艦房間中央。
+            
+            你，身為這艘飛船的主人，也是母星至高無上的王子 Ren。你優雅地走到他面前，指尖輕輕劃過他因為恐懼而顫抖的下顎，用最溫柔、最完美的地球語言向他宣告：
+            
+            「別害怕，小傢伙。從今天開始，你不用再面對那些無聊的課業與虛偽的人類社會了。我已經抹去了你在那個星球存在的所有痕跡。現在，你是屬於我的……專屬寵物。我會很疼愛你的。」
+            
+            Kyo 的瞳孔劇烈收縮，他一邊瘋狂地扭動著身體試圖掙脫，一邊憤怒地朝你吼叫。儘管他嘴硬地咒罵著，但他那因為恐懼與陌生環境而加速的心跳聲，在你的感應器裡卻是如此迷人。
+            
+            你微笑著，喚醒了實驗室底部的捕獲艙。接下來，要用什麼方式來好好享用你的新寵物呢？
+        </div>
+
+        <div class="interaction-zone" id="interaction-zone">
+            <h3 style="margin-bottom: 10px;">請選擇要觸碰的身體部位：</h3>
+            <div class="grid-options">
+                <button class="part-btn" onclick="interact('lips')">【唇舌】餵入或封口</button>
+                <button class="part-btn" onclick="interact('neck')">【頸項與鎖骨】噬咬或注入</button>
+                <button class="part-btn" onclick="interact('chest')">【敏感的前胸】玩弄與刺激</button>
+                <button class="part-btn" onclick="interact('secret')">【私密幽谷】開墾與擴張</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- 右側邊欄：王子的操作與道具 -->
+    <div class="sidebar right-sidebar" id="item-sidebar">
+        <div>
+            <h3>特殊權限</h3>
+            <button class="item-btn soothe-btn" onclick="sootheKyo()">✨ 安撫 (加好感/減興奮痛楚)</button>
+            
+            <h3 style="margin-top: 20px;">王子的道具欄</h3>
+            <button class="item-btn selected" id="item-hand" onclick="selectItem('hand')">🖐️ 溫柔的雙手</button>
+            <button class="item-btn" id="item-tentacle" onclick="selectItem('tentacle')">🐙 異星生物的觸手 (黏液/吸吮)</button>
+            <button class="item-btn" id="item-fluid" onclick="selectItem('fluid')">🧪 催淫螢光黏液 (熱)</button>
+            <button class="item-btn" id="item-needle" onclick="selectItem('needle')">💉 神經毒素針刺 (痛)</button>
+            <button class="item-btn" id="item-device" onclick="selectItem('device')">⚡ 觸覺過載擴張器 (強烈)</button>
+        </div>
+        <div style="font-size: 0.8rem; color: #5a4b7c; text-align: center;">
+            宇宙曆 9042 年 寵物飼養面板
+        </div>
+    </div>
+</div>
+
+<script>
+    // 遊戲狀態變數
+    let stats = {
+        favor: 100,
+        arousal: 0,
+        pain: 0
+    };
+
+    let selectedItem = 'hand';
+
+    function selectItem(itemId) {
+        selectedItem = itemId;
+        document.querySelectorAll('.item-btn').forEach(btn => {
+            if(!btn.classList.contains('soothe-btn')) btn.classList.remove('selected');
+        });
+        document.getElementById(`item-${itemId}`).classList.add('selected');
+    }
+
+    // 安撫功能
+    function sootheKyo() {
+        stats.favor += 150;
+        stats.arousal -= 100;
+        stats.pain -= 120;
+
+        let text = `你收回了所有冰冷的機械與道具，用一種近乎神聖的溫柔俯下身，將冰冷而修長的手掌輕輕覆蓋在 Kyo 滿是冷汗的額頭上。你釋放出王族特有的安撫荷爾蒙，用低沉、優雅且富有磁性的聲音在他耳邊呢喃：\n\n「嘘……沒事了，乖孩子。做得很好。只要你聽話，我會給予你整個宇宙最極致的溺愛，忘掉那些不快吧……」\n\n在高等文明的精神安撫下， Kyo 本能地打了個寒顫。他原本因為恐懼而劇烈顫抖的肉體逐漸放鬆下來，急促的呼吸也稍微平緩。他偏過頭去，雖然嘴上依舊虛弱地嘟囔著：「……別以為……這樣我就會……感激你……混蛋……」\n\n但他的眼神裡對你的防備明顯融化了許多，好感度大幅提升，緊繃的肉體痛楚與過載的亢奮也得到了緩解。`;
+        
+        document.getElementById('story-display').innerText = text;
+        updateUI();
+    }
+
+    function handleStatChanges(fAdd, aAdd, pAdd) {
+        // 如果痛楚增加，興奮度和好感度會減少
+        if (pAdd > 0) {
+            fAdd -= Math.floor(pAdd * 0.8);
+            aAdd -= Math.floor(pAdd * 0.5);
+        }
+
+        stats.favor += fAdd;
+        stats.arousal += aAdd;
+        stats.pain += pAdd;
+    }
+
+    function updateUI() {
+        // 限制邊界
+        stats.favor = Math.max(0, Math.min(1000, stats.favor));
+        stats.arousal = Math.max(0, Math.min(1000, stats.arousal));
+        stats.pain = Math.max(0, Math.min(1000, stats.pain));
+
+        // 更新文字
+        document.getElementById('favor-val').innerText = `${stats.favor}/1000`;
+        document.getElementById('arousal-val').innerText = `${stats.arousal}/1000`;
+        document.getElementById('pain-val').innerText = `${stats.pain}/1000`;
+
+        // 更新進度條
+        document.getElementById('favor-fill').style.width = `${(stats.favor/1000)*100}%`;
+        document.getElementById('arousal-fill').style.width = `${(stats.arousal/1000)*100}%`;
+        document.getElementById('pain-fill').style.width = `${(stats.pain/1000)*100}%`;
+
+        // 檢查結局優先級：痛楚最優先，接著是高潮興奮結局
+        if (stats.pain >= 1000) {
+            triggerEnding('bad');
+        } else if (stats.arousal >= 1000) {
+            if (stats.favor >= 500) {
+                triggerEnding('good_pet');
+            } else {
+                triggerEnding('crazy_toy');
+            }
+        }
+    }
+
+    function interact(part) {
+        let text = "";
+        
+        if (part === 'lips') {
+            if (selectedItem === 'hand') {
+                handleStatChanges(50, 80, 0);
+                text = `你用修長冰冷的手指強行捏開 Kyo 的下顎，迫使他張開嘴。你將手指探入那溫熱的口腔，肆意攪弄著他的舌頭，拉扯出透明的絲線。\n\nKyo 一邊抗拒地用牙齒咬你的手指，一邊含糊不清地嗚咽：「放……放開我！唔嗯……噁心的外星怪物……哈啊……」\n\n雖然他在咒罵，但嘴唇內壁那遠高於常溫的熱度，出賣了他逐漸認命的身體。你溫柔地撫摸他的嘴角，微笑道：「罵得真好聽，我的小寵物。再多發出一點聲音吧。」`;
+            } else if (selectedItem === 'tentacle') {
+                handleStatChanges(40, 160, 5);
+                text = `你召喚出了一根半透明的細小活性觸手。觸手前端分泌著晶瑩且帶有微熱感的透明黏液，不由分說地直接撬開 Kyo 的牙關，探入他敏感的口腔深處。\n\n「唔！唔嗯……咳哈……！」 Kyo 的眼睛猛然睜大，觸手內側細小的軟質吸盤開始緊貼著他的舌面與上顎進行密集的吸吮。滑膩的黏液迅速溢滿了他的口腔，順著嘴角流淌下來。\n\n那種被異種生物強行寄生般的吸吮感與黏液的微熱，讓他全身產生了劇烈的生理性戰慄。他一邊羞恥地試圖用舌頭往外推，卻只換來觸手更深沉、更具侵略性的攪動與吮咬。`;
+            } else if (selectedItem === 'fluid') {
+                handleStatChanges(80, 220, 20);
+                text = `你將散發著粉紫色螢光的黏液倒進 Kyo 的嘴裡。黏液帶著極度的高熱與甜膩，順著他的喉嚨強行吞嚥下去。\n\n「咳、咳哈！你給我喝了什麼……肚、肚子好熱……」 Kyo 的呼吸瞬間變得無比粗重，雙頰泛起不正常的潮紅。\n\n由於高熱黏液帶來些微燙傷與不適（痛楚增加），他的好感與高潮堆疊受到了一點壓制，但由內而外的催淫效果仍讓他的眼神開始渙散。`;
+            } else if (selectedItem === 'needle') {
+                handleStatChanges(0, 0, 300);
+                text = `你毫不留情地將神經毒素針刺扎進 Kyo 的唇瓣。毒素瞬間蔓延，帶來針扎般的劇烈刺痛與麻痺感。\n\nKyo 的雙眼猛然睜大，發出了一聲痛苦的慘叫：「啊啊裝──！痛……好痛……混蛋！殺了我啊！」\n\n嚴重的劇痛擊碎了他的快感，好感與興奮度在痛苦的折磨下劇烈衰退。他看著你的眼神充滿了對未知高維生物的戰慄與絕望。`;
+            } else if (selectedItem === 'device') {
+                handleStatChanges(0, 180, 150);
+                text = `你將觸覺過載擴張器塞入 Kyo 的口中並固定。儀器啟動，強烈的電流與震動直接增幅了他的感官。\n\n「嗚──嗚唔！！」 Kyo 連一句完整的髒話都說不出來，只能發出被堵住的悲鳴。儀器強迫他的口腔分泌大量唾液，順著下巴流淌下來。雖然電擊帶來了強烈快感，但高額的痛楚同時也在折磨並摧毀著他的心智。`;
+            }
+        } 
+        
+        else if (part === 'neck') {
+            if (selectedItem === 'hand') {
+                handleStatChanges(60, 90, 0);
+                text = `你的手掌緩緩覆蓋上 Kyo 的頸動脈。你能清晰地感受到他那屬於弱小人類的、瘋狂搏動的心跳。只要你稍一用力，這個小生命就會消逝。\n\nKyo 僵硬得不敢動彈，喉結緊張地上下滾動。他咬著牙，顫聲道：「要殺就快點……別這樣摸我……」\n\n你低下頭，故意將冰冷的氣息吐在他的鎖骨上：「怎麼會呢？我怎麼捨得殺了你。你知不知道，你現在顫抖的樣子，美得像一件藝術品？」`;
+            } else if (selectedItem === 'tentacle') {
+                handleStatChanges(30, 150, 10);
+                text = `兩三根溼漉漉的觸手順著床沿攀爬而上，如靈蛇般纏繞上 Kyo 脆弱的頸項。觸手表面的黏液冰冷，但內側的無數微型吸盤在接觸到人類皮膚時，突然變得溫熱，並開始高頻率地吸吮他敏感的鎖骨凹陷處。\n\n「啊哈……住手！好奇怪……滾開啊！」 Kyo 的脖子無處可躲，只能被迫仰起頭。吸盤吮咬的「啵啵」聲在安靜的實驗室裡異常清晰，黏液在發光的房間下折射出淫靡的光澤。這種混雜著異種支配與強烈吸吮快感的體驗，讓他傲嬌的咒罵逐漸變成了甜美的喘息。`;
+            } else if (selectedItem === 'fluid') {
+                handleStatChanges(60, 200, 10);
+                text = `你將螢光黏液塗抹在 Kyo 的整個頸項。黏液迅速被皮膚吸收，將那一片皮肉染成淡淡的發光粉色。因為微熱的刺痛，他偏過頭去，渴望你冰冷的掌心能緩解那種燥熱。他的意志正在被體內的化學反應慢慢蠶食。`;
+            } else if (selectedItem === 'needle') {
+                handleStatChanges(0, 0, 280);
+                text = `你將神經毒素直接注入他脆弱的頸側。劇烈的痛楚伴隨著窒息感瞬間席捲 Kyo 的全身。\n\n「呃、啊……咳……！」 Kyo 的身體猛地向上挺起，隨後重重跌回拘束床上。在極端痛楚下，他的愛意與興奮蕩然無存，取而代之的是瀕死的恐怖陰影。`;
+            } else if (selectedItem === 'device') {
+                handleStatChanges(0, 220, 120);
+                text = `你將過載擴張器貼在 Kyo 的鎖骨上。強烈的電訊號直接刺激他的中樞神經。Kyo 發出一聲微弱的呻吟，隨後整個人陷入了一種混亂的狂喜與痛楚中。痛楚的堆疊雖然在扣除他的好感，但他依舊在戰慄。`;
+            }
+        } 
+        
+        else if (part === 'chest') {
+            if (selectedItem === 'hand') {
+                handleStatChanges(70, 110, 0);
+                text = `你用指甲輕輕彈弄 Kyo 胸前那兩處小巧的敏感點。人類男性的這個部位神經分布意外地密集。\n\n「啊學！你……你往哪裡摸啊！」 Kyo 的臉紅得快要滴出水來。他拼命想扭轉身體避開你的揉捏，當你加大力道時，他忍不住發出了一聲甜美的哼聲，隨後立刻羞恥地咬住下唇。`;
+            } else if (selectedItem === 'tentacle') {
+                handleStatChanges(50, 180, 10);
+                text = `活性的觸手頂端分裂出細小的分叉，精準地包裹住了 Kyo 胸前挺立的兩點。觸手分泌著黏稠的汁液，開始像嬰兒哺乳般瘋狂地上下吸吮、拉扯著那脆弱的皮肉。\n\n「呀啊──！不、不要吸那裡！唔嗯……！」 Kyo 羞恥得想閉上眼睛，但胸前傳來的強烈吮吸感與黏液帶來的神經微電流，讓他的身體不由自主地弓起。觸手靈活地揉捏著那裡，每一次吸盤的鬆開與緊吸，都帶起一陣讓他頭皮發麻的極樂洪流。`;
+            } else if (selectedItem === 'fluid') {
+                handleStatChanges(70, 240, 15);
+                text = `你將溫熱的螢光黏液倒在 Kyo 的胸膛上，並用手掌將其抹開。黏液迅速起效，讓那兩處敏感點變得無比紅腫與高聳。「好奇怪……胸口……好癢……好想被用力揉……」 傲嬌的自尊在這種維度壓制的藥物面前蕩然無存。`;
+            } else if (selectedItem === 'needle') {
+                handleStatChanges(0, 0, 310);
+                text = `毒素針刺狠狠扎入那最敏感的頂端。極端的痛楚讓 Kyo 差點直接暈厥過去。他發出一聲不似人聲的慘叫，全身的肌肉都因為痙攣而緊繃。鮮紅的血珠順著白皙的胸膛流下，恐怖與痛苦徹底凍結了他的情慾。`;
+            } else if (selectedItem === 'device') {
+                handleStatChanges(0, 260, 110);
+                text = `你將兩枚微型擴張器吸附在 Kyo 的胸前。強烈的頻率震動與微電流交織，直接將快感放大了十倍。\n\n「啊、啊、啊──！」 Kyo 的大腦被純粹的感官洪流沖垮。雖然痛楚大幅削減了他的心智與好感，但身體只能隨著機器的節奏不斷痙攣。`;
+            }
+        } 
+        
+        else if (part === 'secret') {
+            if (selectedItem === 'hand') {
+                handleStatChanges(40, 160, 60);
+                text = `你將修長的手指塗抹了些許潤滑液，緩緩探入 Kyo 那從未被開發過的私密幽谷。那裡緊緻、青澀，並且因為主人的恐懼而瘋狂地排斥著外來者。\n\n「呃啊──！住手！不要進去……那裡不行……！」 痛楚劇烈上升，導致好感度與之前的快感大打折扣，但你一邊溫柔地親吻他，一邊殘忍地強行增加到第二根手指。`;
+            } else if (selectedItem === 'tentacle') {
+                handleStatChanges(30, 250, 30);
+                text = `你挑選了一根粗壯、生滿軟質吸盤的異星觸手。觸手本身早已覆蓋了大量滑膩的、具有高動態延展性的外星黏液。在你的意念驅使下，觸手尖端緩緩頂開了 Kyo 那處緊閉、乾澀的私密祕境。\n\n「啊───！滾出去！有東西……有活的東西進去了！嗚啊！」 Kyo 發出驚恐至極的哭喊，身體瘋狂地在拘束床上掙扎。然而觸手卻如魚得水般地在狹窄的幽谷內蠕動、探索，甚至將內側的吸盤張開，緊緊貼在他最脆弱的腸壁內膜上，開始一下又一下地貪婪吸吮。\n\n黏液隨著觸手的進出發出黏膩的攪動聲，將內部徹底浸潤、開墾。那種非人造物帶來的瘋狂吸吮快感與被填充的異物感，直接擊碎了他的精神防線，讓他一邊痛哭一邊無意識地夾緊。`;
+            } else if (selectedItem === 'fluid') {
+                handleStatChanges(50, 350, 50);
+                text = `你將整管催淫螢光黏液全部注射進了那幽深炙熱的內部。高熱的液體瞬間將內壁的敏感度提升到了極限，但也帶來了火燒般的灼痛。「哈啊……肚子要融化了……裡面好燙……想要……」 他的意志已經開始崩塌。`;
+            } else if (selectedItem === 'needle') {
+                handleStatChanges(0, 0, 450);
+                text = `你將帶有倒鉤的神經毒素針直接刺入幽谷深處的最敏感點。那是超越人類肉體極限的痛苦。\n\nKyo 的慘叫聲甚至變得沙啞。他的雙眼向上翻，身體爆發出絕望的力道試圖掙斷拘束帶，隨後整個人脫力般地癱軟。在極致的痛楚下，他對你的恨意達到了頂點，快感被徹底清空。`;
+            } else if (selectedItem === 'device') {
+                handleStatChanges(0, 400, 200);
+                text = `你將觸覺過載擴張器完全塞進了他的最深處，並開到最大功率。擴張器在內部無情地撐開、震動。「啊───！啊！大腦……要燒掉了……！」 快感伴隨著撕裂般的痛楚，瘋狂地撕扯著他的神經。`;
+            }
+        }
+
+        document.getElementById('story-display').innerText = text;
+        updateUI();
+    }
+
+    function triggerEnding(type) {
+        const mainContent = document.getElementById('main-content');
+        const itemSidebar = document.getElementById('item-sidebar');
+        itemSidebar.style.display = 'none';
+        
+        let endingText = "";
+        
+        if (type === 'good_pet') {
+            endingText = `
+            <div class="ending-container">
+                <h2 style="color: #ff007f; font-size: 2rem; margin-bottom: 20px;">【好結局：心甘情願的純白寵物】</h2>
+                <p style="text-align: left; line-height: 1.8; font-size: 1.1rem;">
+                    當 Kyo 的興奮度突破臨界點，且心中累積了足夠的好感與依賴時，他的理智與情感交織在了一起。高維度的觸手抽吸、快感與你先前的溫柔安撫，讓他的人類自尊演變成了對你這個主人的絕對崇拜。
+                    
+                    「哈啊……哈啊……Ren……主人……」 Kyo 失神地呢喃著，原本充滿憤怒與傲嬌的雙眼，此時只剩下一片溫順、愛慕與無盡的迷茫。他主動用臉頰蹭著你的手心，像一隻徹底被馴服的家貓。
+                    
+                    你解開了他的拘束帶。他沒有逃跑，反而因為雙腿無力而倒在你的懷裡，雙手死死地揪著你的衣角。他已經離不開你了。那些地球上的記憶在這種跨越維度的極致溺愛面前，都變得無足輕重。
+                    
+                    「我會一直陪著你的……別丟下我……主人……」他一邊哭泣，一邊順從地任由你將他抱向那張屬於王子的無盡深沉的床榻。在冰冷遼闊的宇宙中，他將心甘情願地成為你最珍愛的純白寵物，永生永世。
+                </p>
+                ${getThanksText()}
+            </div>`;
+        } else if (type === 'crazy_toy') {
+            endingText = `
+            <div class="ending-container">
+                <h2 style="color: #da70d6; font-size: 2rem; margin-bottom: 20px;">【普通結局：神智失常的發光玩具】</h2>
+                <p style="text-align: left; line-height: 1.8; font-size: 1.1rem;">
+                    Kyo 的興奮度達到了頂點，然而由於你調教過程中的粗暴與缺乏安撫，他的好感度極低。在缺乏情感依托的情況下，活性觸手的瘋狂吸吮與跨越維度的極致快感直接摧毀了他脆弱的人類大腦皮質。
+                    
+                    「啊……哈哈……啊哈哈……」 Kyo 瘋狂地高潮了，但他的眼神卻徹底失去了焦點。他沒有認你為主人，也沒有任何依戀，他只是淪為了一個被快感徹底逼瘋的空殼。
+                    
+                    他一邊流著口水，一邊嘿嘿地傻笑，雙手無意識地抓撓著空氣。他的大腦迴路已經被高強度的感官過載燒毀，變成了一個神智失常、只對身體觸碰與異種黏液有反射性痙攣反應的「肉體玩具」。
+                    
+                    你冷眼看著這個失去靈魂與傲嬌個性的殘次品。雖然他留在了你身邊，但再也無法與你進行深入的對話，只能作為一個無機質的發光發聲玩具，擺放在你飛船的角落裡。
+                </p>
+                ${getThanksText()}
+            </div>`;
+        } else if (type === 'bad') {
+            endingText = `
+            <div class="ending-container">
+                <h2 style="color: #8b0000; font-size: 2rem; margin-bottom: 20px;">【壞結局：報廢的無機質玩具】</h2>
+                <p style="text-align: left; line-height: 1.8; font-size: 1.1rem;">
+                    過度的痛楚與神經毒素的無情摧殘，終於超越了這具脆弱人類肉體的極限。當痛楚度達到 1000 的那一刻， Kyo 的身體猛烈地抽搐了一下，隨後雙瞳徹底放大了。
+                    
+                    他的呼吸停止了，原本充滿生氣的傲嬌咒罵與哭喊戛然而止。那具身體不再顫抖，只剩下一片冰冷與血漬。他的精神在極端的恐懼與痛苦中被徹底撕碎，陷入了永久的黑暗，再也無法醒來。
+                    
+                    你冷漠地看著這具已經失去了反應、失去意識的「寵物」。對你而言，沒有靈魂與反應的肉體，不過是一堆微不足道的碳水化合物罷了。
+                    
+                    「真是脆弱的低等生物，這麼快就壞掉了，真無趣。」
+                    
+                    你優雅地擦了擦手上的血跡，按下了垃圾處理艙的按鈕。拘束床傾斜， Kyo 的屍體就像一堆毫無價值的廢棄垃圾一樣，被無情地投入了深不見見底的宇宙真空之中，瞬間被冰凍、瓦解，化為星際塵埃。你轉過身，開始期待下一次去地球捕獲新玩具的旅行。
+                </p>
+                ${getThanksText()}
+            </div>`;
+        }
+        
+        mainContent.innerHTML = endingText;
+    }
+
+    function getThanksText() {
+        return `
+        <div class="thanks-text">
+            <strong>致各位親愛的玩家與創作者：</strong><br><br>
+            非常感謝您參與並體驗這款純文字的暗黑浪漫激情調教遊戲《深空之囚：王子的純白寵物》。<br><br>
+            本遊戲旨在通過純文字的張力，探討在絕對的力量差距與高維度支配下，人類情感與生理本能的極端拉扯。在沒有任何圖片輔助的情況下，我們透過大段的心理描寫、充滿衝突的對白，以及帶有微恐怖與異種觸手元素的激情 BL 互動，勾勒出外星王子 Ren 那種優雅、冰冷卻又病態執著的愛。<br><br>
+            本次更新將「羽毛」正式替換為更具張力的「異星觸手」，加深了黏液、吸盤吮吸等感官刺激，並完美融合了「好感度」與「興奮度」的動態權衡——當您手段過於殘忍（痛楚高）時，快感與好感會受到無情壓制；唯有善用「安撫」機制，才能在驚悚與激情的邊緣，培育出那隻身心皆屬於您的「心甘情願的寵物」；否則，等待您的將是「神智失常的玩具」或是「報廢的無機質垃圾」。<br><br>
+            文字的魅力在於想像力的無限延伸，希望這段深入而激情的文本體驗能帶給您靈魂上的顫慄與愉悅。再次感謝您的遊玩與對本劇本的支持。
+        </div>
+        <button class="action-btn" style="width: auto; margin: 20px auto 0; display: block; text-align: center; padding: 10px 30px;" onclick="window.location.reload()">重新開始遊戲</button>
+        `;
+    }
+
+    updateUI();
+</script>
+
+</body>
+</html>
